@@ -1,0 +1,264 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestión de Usuarios - AgendaMédica{% endblock %}
+
+{% block extra_css %}
+<style>
+    .user-card {
+        transition: transform 0.2s;
+    }
+    .user-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .user-type-badge {
+        font-size: 0.8em;
+    }
+    .search-filters {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-users-cog text-primary"></i> Gestión de Usuarios</h2>
+                    <p class="text-muted">Administrar usuarios del sistema</p>
+                </div>
+                <a href="{% url 'administracion:dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver al Dashboard
+                </a>
+            </div>
+
+            <!-- Filtros de búsqueda -->
+            <div class="search-filters">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-6">
+                        <label for="busqueda" class="form-label">Buscar Usuario</label>
+                        <input type="text" class="form-control" id="busqueda" name="busqueda" 
+                               value="{{ busqueda }}" placeholder="Nombre, apellido o email...">
+                    </div>
+                    <div class="col-md-4">
+                        <label for="tipo" class="form-label">Tipo de Usuario</label>
+                        <select class="form-control" id="tipo" name="tipo">
+                            <option value="">Todos los tipos</option>
+                            {% for tipo_key, tipo_label in tipos_usuario %}
+                                <option value="{{ tipo_key }}" 
+                                        {% if tipo_key == tipo_seleccionado %}selected{% endif %}>
+                                    {{ tipo_label }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-outline-primary me-2">
+                            <i class="fas fa-search"></i> Buscar
+                        </button>
+                        <a href="{% url 'administracion:gestion_usuarios' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Estadísticas rápidas -->
+            <div class="row mb-4">
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h4 class="text-primary">{{ usuarios|length }}</h4>
+                            <small class="text-muted">Total Usuarios</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h4 class="text-success">{{ usuarios|length }}</h4>
+                            <small class="text-muted">Usuarios Activos</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h4 class="text-info">
+                                {% for usuario in usuarios %}
+                                    {% if usuario.tipo_usuario == 'doctor' %}{{ forloop.counter0|add:1 }}{% endif %}
+                                {% empty %}0{% endfor %}
+                            </h4>
+                            <small class="text-muted">Doctores</small>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="card text-center">
+                        <div class="card-body">
+                            <h4 class="text-warning">
+                                {% for usuario in usuarios %}
+                                    {% if usuario.tipo_usuario == 'paciente' %}{{ forloop.counter0|add:1 }}{% endif %}
+                                {% empty %}0{% endfor %}
+                            </h4>
+                            <small class="text-muted">Pacientes</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Lista de usuarios -->
+            {% if usuarios %}
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">Lista de Usuarios</h5>
+                    </div>
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Usuario</th>
+                                        <th>Email</th>
+                                        <th>Tipo</th>
+                                        <th>Teléfono</th>
+                                        <th>Fecha Registro</th>
+                                        <th>Estado</th>
+                                        <th>Acciones</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for usuario in usuarios %}
+                                        <tr>
+                                            <td>
+                                                <div class="d-flex align-items-center">
+                                                    <div class="avatar-circle me-3">
+                                                        <i class="fas fa-user"></i>
+                                                    </div>
+                                                    <div>
+                                                        <h6 class="mb-0">{{ usuario.get_full_name|default:"Sin nombre" }}</h6>
+                                                        <small class="text-muted">{{ usuario.username }}</small>
+                                                    </div>
+                                                </div>
+                                            </td>
+                                            <td>{{ usuario.email }}</td>
+                                            <td>
+                                                <span class="badge 
+                                                    {% if usuario.tipo_usuario == 'administrador' %}bg-primary
+                                                    {% elif usuario.tipo_usuario == 'doctor' %}bg-success
+                                                    {% elif usuario.tipo_usuario == 'recepcion' %}bg-info
+                                                    {% elif usuario.tipo_usuario == 'paciente' %}bg-warning
+                                                    {% else %}bg-secondary{% endif %} user-type-badge">
+                                                    {{ usuario.get_tipo_usuario_display }}
+                                                </span>
+                                            </td>
+                                            <td>{{ usuario.telefono|default:"-" }}</td>
+                                            <td>{{ usuario.date_joined|date:"d/m/Y" }}</td>
+                                            <td>
+                                                {% if usuario.is_active %}
+                                                    <span class="badge bg-success">Activo</span>
+                                                {% else %}
+                                                    <span class="badge bg-danger">Inactivo</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                <div class="btn-group" role="group">
+                                                    {% if usuario.tipo_usuario == 'doctor' %}
+                                                        <a href="{% url 'doctores:editar_doctor' usuario.doctor.id %}" 
+                                                           class="btn btn-outline-primary btn-sm" title="Editar Doctor">
+                                                            <i class="fas fa-edit"></i>
+                                                        </a>
+                                                        <a href="{% url 'doctores:gestionar_horarios' %}?doctor_id={{ usuario.doctor.id }}" 
+                                                           class="btn btn-outline-info btn-sm" title="Gestionar Horarios">
+                                                            <i class="fas fa-clock"></i>
+                                                        </a>
+                                                    {% endif %}
+                                                    <button type="button" class="btn btn-outline-secondary btn-sm" 
+                                                            title="Ver Detalles" onclick="verDetalles({{ usuario.id }})">
+                                                        <i class="fas fa-eye"></i>
+                                                    </button>
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-users fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">No se encontraron usuarios</h4>
+                    <p class="text-muted">
+                        {% if busqueda or tipo_seleccionado %}
+                            Intenta ajustar los filtros de búsqueda.
+                        {% else %}
+                            No hay usuarios registrados en el sistema.
+                        {% endif %}
+                    </p>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal para ver detalles del usuario -->
+<div class="modal fade" id="modalDetalles" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Detalles del Usuario</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body" id="contenidoDetalles">
+                <!-- El contenido se cargará dinámicamente -->
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_css2 %}
+{{ block.super }}
+<style>
+    .avatar-circle {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background-color: #e9ecef;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function verDetalles(usuarioId) {
+    // Por ahora mostrar información básica
+    // En el futuro se puede hacer una llamada AJAX para obtener más detalles
+    const modal = new bootstrap.Modal(document.getElementById('modalDetalles'));
+    document.getElementById('contenidoDetalles').innerHTML = `
+        <div class="text-center">
+            <i class="fas fa-info-circle fa-3x text-info mb-3"></i>
+            <p>Funcionalidad de detalles en desarrollo</p>
+            <p class="text-muted">ID del usuario: ${usuarioId}</p>
+        </div>
+    `;
+    modal.show();
+}
+</script>
+{% endblock %} 

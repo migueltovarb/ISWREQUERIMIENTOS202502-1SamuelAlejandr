@@ -1,0 +1,374 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Editar Doctor - Dr. {{ doctor.get_nombre_completo }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .form-section {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    .form-section h5 {
+        color: #495057;
+        border-bottom: 2px solid #dee2e6;
+        padding-bottom: 10px;
+        margin-bottom: 20px;
+    }
+    .required-field::after {
+        content: " *";
+        color: #dc3545;
+    }
+    .info-card {
+        background-color: #e3f2fd;
+        border-left: 4px solid #2196f3;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    .status-badge {
+        font-size: 0.9em;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-user-edit text-primary"></i> Editar Doctor</h2>
+                    <p class="text-muted">Dr. {{ doctor.get_nombre_completo }} - {{ doctor.especialidad.nombre }}</p>
+                </div>
+                <div>
+                    <span class="badge {% if doctor.activo %}bg-success{% else %}bg-secondary{% endif %} status-badge me-2">
+                        {% if doctor.activo %}Activo{% else %}Inactivo{% endif %}
+                    </span>
+                    <a href="{% url 'doctores:lista_doctores' %}" class="btn btn-outline-secondary">
+                        <i class="fas fa-arrow-left"></i> Volver
+                    </a>
+                </div>
+            </div>
+
+            <!-- Información del sistema -->
+            <div class="info-card">
+                <div class="row">
+                    <div class="col-md-6">
+                        <small class="text-muted d-block">
+                            <i class="fas fa-envelope"></i> <strong>Email de acceso:</strong> {{ doctor.usuario.email }}
+                        </small>
+                        <small class="text-muted d-block">
+                            <i class="fas fa-calendar-plus"></i> <strong>Registrado:</strong> {{ doctor.usuario.date_joined|date:"d/m/Y H:i" }}
+                        </small>
+                    </div>
+                    <div class="col-md-6">
+                        <small class="text-muted d-block">
+                            <i class="fas fa-sign-in-alt"></i> <strong>Último acceso:</strong> 
+                            {% if doctor.usuario.last_login %}
+                                {{ doctor.usuario.last_login|date:"d/m/Y H:i" }}
+                            {% else %}
+                                Nunca
+                            {% endif %}
+                        </small>
+                        <small class="text-muted d-block">
+                            <i class="fas fa-id-card"></i> <strong>Licencia:</strong> {{ doctor.numero_licencia }}
+                        </small>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulario -->
+            <form method="POST" novalidate>
+                {% csrf_token %}
+                
+                <!-- Información Personal -->
+                <div class="form-section">
+                    <h5><i class="fas fa-user"></i> Información Personal</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.first_name.id_for_label }}" class="form-label required-field">
+                                {{ form.first_name.label }}
+                            </label>
+                            {{ form.first_name }}
+                            {% if form.first_name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.first_name.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.last_name.id_for_label }}" class="form-label required-field">
+                                {{ form.last_name.label }}
+                            </label>
+                            {{ form.last_name }}
+                            {% if form.last_name.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.last_name.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label class="form-label">Correo Electrónico</label>
+                            <input type="email" class="form-control" value="{{ doctor.usuario.email }}" readonly>
+                            <div class="form-text">El correo no se puede modificar una vez creado</div>
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.telefono.id_for_label }}" class="form-label">
+                                {{ form.telefono.label }}
+                            </label>
+                            {{ form.telefono }}
+                            {% if form.telefono.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.telefono.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información Profesional -->
+                <div class="form-section">
+                    <h5><i class="fas fa-stethoscope"></i> Información Profesional</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.especialidad.id_for_label }}" class="form-label required-field">
+                                {{ form.especialidad.label }}
+                            </label>
+                            {{ form.especialidad }}
+                            {% if form.especialidad.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.especialidad.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.numero_licencia.id_for_label }}" class="form-label required-field">
+                                {{ form.numero_licencia.label }}
+                            </label>
+                            {{ form.numero_licencia }}
+                            {% if form.numero_licencia.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.numero_licencia.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Información del Consultorio -->
+                <div class="form-section">
+                    <h5><i class="fas fa-clinic-medical"></i> Información del Consultorio</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.consultorio.id_for_label }}" class="form-label">
+                                {{ form.consultorio.label }}
+                            </label>
+                            {{ form.consultorio }}
+                            {% if form.consultorio.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.consultorio.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.telefono_consultorio.id_for_label }}" class="form-label">
+                                {{ form.telefono_consultorio.label }}
+                            </label>
+                            {{ form.telefono_consultorio }}
+                            {% if form.telefono_consultorio.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.telefono_consultorio.errors.0 }}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Estado del Doctor -->
+                <div class="form-section">
+                    <h5><i class="fas fa-toggle-on"></i> Estado del Doctor</h5>
+                    <div class="row">
+                        <div class="col-md-6 mb-3">
+                            <div class="form-check">
+                                {{ form.activo }}
+                                <label class="form-check-label" for="{{ form.activo.id_for_label }}">
+                                    {{ form.activo.label }}
+                                </label>
+                            </div>
+                            {% if form.activo.errors %}
+                                <div class="invalid-feedback d-block">
+                                    {{ form.activo.errors.0 }}
+                                </div>
+                            {% endif %}
+                            <div class="form-text">
+                                Los doctores inactivos no aparecerán en las búsquedas de disponibilidad
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <!-- Estadísticas del doctor -->
+                            <div class="card bg-light">
+                                <div class="card-body p-3">
+                                    <h6 class="card-title mb-2">Estadísticas</h6>
+                                    <small class="text-muted d-block">
+                                        <i class="fas fa-clock"></i> 
+                                        Horarios configurados: {{ doctor.horarios_atencion.count }}
+                                    </small>
+                                    <small class="text-muted d-block">
+                                        <i class="fas fa-calendar-times"></i> 
+                                        Excepciones activas: {{ doctor.excepciones_horario.count }}
+                                    </small>
+                                    <!-- TODO: Agregar estadísticas de citas cuando se implemente -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Errores generales del formulario -->
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+
+                <!-- Botones de acción -->
+                <div class="d-flex justify-content-between">
+                    <div>
+                        <a href="{% url 'doctores:lista_doctores' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times"></i> Cancelar
+                        </a>
+                    </div>
+                    <div>
+                        <a href="{% url 'doctores:gestionar_horarios' %}?doctor_id={{ doctor.id }}" class="btn btn-outline-info me-2">
+                            <i class="fas fa-clock"></i> Gestionar Horarios
+                        </a>
+                        <a href="{% url 'doctores:gestionar_excepciones' %}?doctor_id={{ doctor.id }}" class="btn btn-outline-warning me-2">
+                            <i class="fas fa-calendar-times"></i> Excepciones
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save"></i> Guardar Cambios
+                        </button>
+                    </div>
+                </div>
+            </form>
+
+            <!-- Acciones adicionales -->
+            <div class="mt-4 p-3 bg-light rounded">
+                <h6><i class="fas fa-cog"></i> Acciones Adicionales</h6>
+                <div class="row">
+                    <div class="col-md-6">
+                        <button type="button" class="btn btn-outline-warning btn-sm w-100 mb-2" onclick="resetearPassword()">
+                            <i class="fas fa-key"></i> Resetear Contraseña
+                        </button>
+                    </div>
+                    <div class="col-md-6">
+                        <button type="button" class="btn btn-outline-danger btn-sm w-100 mb-2" 
+                                onclick="confirmarDesactivacion()">
+                            <i class="fas fa-user-slash"></i> 
+                            {% if doctor.activo %}Desactivar Doctor{% else %}Activar Doctor{% endif %}
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para resetear contraseña -->
+<div class="modal fade" id="modalResetPassword" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Resetear Contraseña</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas resetear la contraseña del Dr. {{ doctor.get_nombre_completo }}?</p>
+                <p class="text-muted small">Se generará una nueva contraseña temporal que deberá cambiar en su primer acceso.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <button type="button" class="btn btn-warning" onclick="ejecutarResetPassword()">
+                    Resetear Contraseña
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal para confirmar desactivación -->
+<div class="modal fade" id="modalDesactivar" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Acción</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas {% if doctor.activo %}desactivar{% else %}activar{% endif %} al Dr. {{ doctor.get_nombre_completo }}?</p>
+                <p class="text-muted small">
+                    {% if doctor.activo %}
+                        El doctor no aparecerá en las búsquedas de disponibilidad y no podrá recibir nuevas citas.
+                    {% else %}
+                        El doctor volverá a estar disponible para recibir citas.
+                    {% endif %}
+                </p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form method="POST" action="{% url 'doctores:eliminar_doctor' doctor.id %}" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">
+                        {% if doctor.activo %}Desactivar{% else %}Activar{% endif %}
+                    </button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function resetearPassword() {
+    const modal = new bootstrap.Modal(document.getElementById('modalResetPassword'));
+    modal.show();
+}
+
+function ejecutarResetPassword() {
+    // TODO: Implementar funcionalidad de reset de contraseña
+    alert('Funcionalidad de reset de contraseña pendiente de implementar');
+    bootstrap.Modal.getInstance(document.getElementById('modalResetPassword')).hide();
+}
+
+function confirmarDesactivacion() {
+    const modal = new bootstrap.Modal(document.getElementById('modalDesactivar'));
+    modal.show();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Validación en tiempo real
+    const form = document.querySelector('form');
+    const inputs = form.querySelectorAll('input, select, textarea');
+    
+    inputs.forEach(input => {
+        input.addEventListener('blur', function() {
+            if (this.checkValidity()) {
+                this.classList.remove('is-invalid');
+                this.classList.add('is-valid');
+            } else {
+                this.classList.remove('is-valid');
+                this.classList.add('is-invalid');
+            }
+        });
+    });
+});
+</script>
+{% endblock %} 

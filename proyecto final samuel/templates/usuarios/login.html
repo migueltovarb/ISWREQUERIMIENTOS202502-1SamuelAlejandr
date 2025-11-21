@@ -1,0 +1,143 @@
+{% extends 'base.html' %}
+
+{% block title %}Iniciar Sesión - AgendaMédica{% endblock %}
+
+{% block content %}
+<div class="row justify-content-center">
+    <div class="col-md-5 col-lg-4">
+        <div class="card shadow">
+            <div class="card-header bg-primary text-white text-center">
+                <h4 class="mb-0">
+                    <i class="fas fa-sign-in-alt me-2"></i>
+                    Iniciar Sesión
+                </h4>
+            </div>
+            <div class="card-body p-4">
+                <p class="text-muted text-center mb-4">
+                    Ingresa a tu cuenta de AgendaMédica
+                </p>
+
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    
+                    <!-- Email -->
+                    <div class="mb-3">
+                        <label for="{{ form.username.id_for_label }}" class="form-label">
+                            <i class="fas fa-envelope me-1"></i>
+                            {{ form.username.label }}
+                        </label>
+                        {{ form.username }}
+                        {% if form.username.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.username.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Contraseña -->
+                    <div class="mb-3">
+                        <label for="{{ form.password.id_for_label }}" class="form-label">
+                            <i class="fas fa-lock me-1"></i>
+                            {{ form.password.label }}
+                        </label>
+                        {{ form.password }}
+                        {% if form.password.errors %}
+                            <div class="text-danger small mt-1">
+                                {% for error in form.password.errors %}
+                                    <div>{{ error }}</div>
+                                {% endfor %}
+                            </div>
+                        {% endif %}
+                    </div>
+
+                    <!-- Recordarme -->
+                    <div class="mb-3">
+                        <div class="form-check">
+                            {{ form.remember_me }}
+                            <label class="form-check-label" for="{{ form.remember_me.id_for_label }}">
+                                {{ form.remember_me.label }}
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Errores generales del formulario -->
+                    {% if form.non_field_errors %}
+                        <div class="alert alert-danger">
+                            {% for error in form.non_field_errors %}
+                                <div>{{ error }}</div>
+                            {% endfor %}
+                        </div>
+                    {% endif %}
+
+                    <!-- Botón de inicio de sesión -->
+                    <div class="d-grid">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            <i class="fas fa-sign-in-alt me-2"></i>
+                            Iniciar Sesión
+                        </button>
+                    </div>
+                </form>
+
+                <hr class="my-4">
+
+                <div class="text-center">
+                    <p class="mb-2">
+                        <a href="#" class="text-decoration-none text-muted">
+                            <i class="fas fa-key me-1"></i>
+                            ¿Olvidaste tu contraseña?
+                        </a>
+                    </p>
+                    <p class="mb-0">
+                        ¿No tienes una cuenta?
+                        <a href="{% url 'usuarios:registro' %}" class="text-decoration-none">
+                            Registrarse
+                        </a>
+                    </p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Información adicional -->
+        <div class="card mt-4 bg-light">
+            <div class="card-body text-center">
+                <h6 class="card-title">
+                    <i class="fas fa-info-circle me-2"></i>
+                    Tipos de Usuario
+                </h6>
+                <div class="row text-center">
+                    <div class="col-6 col-md-3">
+                        <i class="fas fa-user text-primary"></i>
+                        <small class="d-block">Paciente</small>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <i class="fas fa-user-md text-success"></i>
+                        <small class="d-block">Doctor</small>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <i class="fas fa-user-tie text-info"></i>
+                        <small class="d-block">Recepción</small>
+                    </div>
+                    <div class="col-6 col-md-3">
+                        <i class="fas fa-user-shield text-warning"></i>
+                        <small class="d-block">Admin</small>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Enfocar el campo de email al cargar la página
+    document.addEventListener('DOMContentLoaded', function() {
+        const emailField = document.getElementById('id_username');
+        if (emailField) {
+            emailField.focus();
+        }
+    });
+</script>
+{% endblock %} 

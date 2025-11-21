@@ -1,0 +1,341 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Editar Horario - Dr. {{ horario.doctor.get_nombre_completo }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .edit-header {
+        background: linear-gradient(135deg, #007bff 0%, #0056b3 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    .horario-actual {
+        background-color: #e3f2fd;
+        border: 1px solid #bbdefb;
+        border-radius: 8px;
+        padding: 15px;
+        margin-bottom: 20px;
+    }
+    .form-section {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+    }
+    .info-card {
+        border-left: 4px solid #17a2b8;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-lg-8">
+            <!-- Header -->
+            <div class="edit-header">
+                <div class="row align-items-center">
+                    <div class="col-md-8">
+                        <h2><i class="fas fa-edit me-2"></i> Editar Horario</h2>
+                        <p class="mb-0">Dr. {{ horario.doctor.get_nombre_completo }} - {{ horario.doctor.especialidad.nombre }}</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <i class="fas fa-clock fa-3x opacity-50"></i>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información del Horario Actual -->
+            <div class="card info-card mb-4">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-info-circle me-2"></i> Horario Actual</h5>
+                </div>
+                <div class="card-body">
+                    <div class="horario-actual">
+                        <div class="row">
+                            <div class="col-md-3">
+                                <strong>Día:</strong><br>
+                                <span class="badge bg-primary fs-6">{{ horario.get_dia_semana_display }}</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Hora Inicio:</strong><br>
+                                <span class="text-primary fs-5">{{ horario.hora_inicio|time:"H:i" }}</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Hora Fin:</strong><br>
+                                <span class="text-primary fs-5">{{ horario.hora_fin|time:"H:i" }}</span>
+                            </div>
+                            <div class="col-md-3">
+                                <strong>Duración Cita:</strong><br>
+                                <span class="text-info">{{ horario.duracion_cita }} min</span>
+                            </div>
+                        </div>
+                        <hr class="my-2">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <strong>Estado:</strong>
+                                <span class="badge {% if horario.activo %}bg-success{% else %}bg-secondary{% endif %} ms-2">
+                                    {% if horario.activo %}Activo{% else %}Inactivo{% endif %}
+                                </span>
+                            </div>
+                            <div class="col-md-6">
+                                <strong>Creado:</strong>
+                                <small class="text-muted">{{ horario.fecha_creacion|date:"d/m/Y H:i" }}</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Formulario de Edición -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-edit me-2"></i> Modificar Horario</h5>
+                </div>
+                <div class="card-body">
+                    <form method="POST">
+                        {% csrf_token %}
+                        
+                        <div class="form-section">
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.dia_semana.id_for_label }}" class="form-label">
+                                        <i class="fas fa-calendar-day me-1"></i>
+                                        {{ form.dia_semana.label }}
+                                    </label>
+                                    {{ form.dia_semana }}
+                                    {% if form.dia_semana.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.dia_semana.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Selecciona el día de la semana para este horario</div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.duracion_cita.id_for_label }}" class="form-label">
+                                        <i class="fas fa-stopwatch me-1"></i>
+                                        {{ form.duracion_cita.label }}
+                                    </label>
+                                    {{ form.duracion_cita }}
+                                    {% if form.duracion_cita.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.duracion_cita.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Tiempo en minutos para cada cita</div>
+                                </div>
+                            </div>
+
+                            <div class="row">
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.hora_inicio.id_for_label }}" class="form-label">
+                                        <i class="fas fa-play me-1"></i>
+                                        {{ form.hora_inicio.label }}
+                                    </label>
+                                    {{ form.hora_inicio }}
+                                    {% if form.hora_inicio.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.hora_inicio.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Hora de inicio de atención</div>
+                                </div>
+                                
+                                <div class="col-md-6 mb-3">
+                                    <label for="{{ form.hora_fin.id_for_label }}" class="form-label">
+                                        <i class="fas fa-stop me-1"></i>
+                                        {{ form.hora_fin.label }}
+                                    </label>
+                                    {{ form.hora_fin }}
+                                    {% if form.hora_fin.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.hora_fin.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                    <div class="form-text">Hora de fin de atención</div>
+                                </div>
+                            </div>
+
+                            <div class="mb-3">
+                                <div class="form-check">
+                                    {{ form.activo }}
+                                    <label class="form-check-label" for="{{ form.activo.id_for_label }}">
+                                        <i class="fas fa-toggle-on me-1"></i>
+                                        {{ form.activo.label }}
+                                    </label>
+                                </div>
+                                {% if form.activo.errors %}
+                                    <div class="invalid-feedback d-block">
+                                        {{ form.activo.errors.0 }}
+                                    </div>
+                                {% endif %}
+                                <div class="form-text">Desmarcar para desactivar temporalmente este horario</div>
+                            </div>
+
+                            <!-- Errores generales del formulario -->
+                            {% if form.non_field_errors %}
+                                <div class="alert alert-danger">
+                                    {% for error in form.non_field_errors %}
+                                        <div>{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endif %}
+                        </div>
+                    </form>
+                </div>
+                
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <a href="{% if user.es_administrador %}{% url 'doctores:gestionar_horarios' %}?doctor_id={{ horario.doctor.id }}{% else %}{% url 'doctores:gestionar_horarios' %}{% endif %}" 
+                               class="btn btn-secondary">
+                                <i class="fas fa-arrow-left me-2"></i>Cancelar
+                            </a>
+                        </div>
+                        
+                        <div>
+                            <button type="button" class="btn btn-outline-danger me-2" 
+                                    onclick="confirmarEliminacion()">
+                                <i class="fas fa-trash me-2"></i>Eliminar Horario
+                            </button>
+                            <button type="submit" form="editForm" class="btn btn-primary">
+                                <i class="fas fa-save me-2"></i>Guardar Cambios
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información Adicional -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="fas fa-lightbulb me-2"></i> Información Importante</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-exclamation-triangle text-warning me-2"></i>Consideraciones:</h6>
+                            <ul class="small text-muted mb-0">
+                                <li>Los cambios afectarán las citas futuras</li>
+                                <li>No se pueden solapar horarios del mismo día</li>
+                                <li>La duración mínima por cita es 15 minutos</li>
+                                <li>Desactivar un horario no elimina las citas existentes</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6><i class="fas fa-info-circle text-info me-2"></i>Estadísticas:</h6>
+                            <ul class="small text-muted mb-0">
+                                <li>Citas programadas: <strong>0</strong> (próximamente)</li>
+                                <li>Franjas disponibles por día: <strong id="franjas-calculadas">-</strong></li>
+                                <li>Tiempo total de atención: <strong id="tiempo-total">-</strong></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación para eliminar -->
+<div class="modal fade" id="modalEliminar" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header bg-danger text-white">
+                <h5 class="modal-title">
+                    <i class="fas fa-exclamation-triangle me-2"></i>
+                    Confirmar Eliminación
+                </h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas eliminar este horario?</p>
+                <div class="alert alert-warning">
+                    <strong>Horario:</strong> {{ horario.get_dia_semana_display }} de {{ horario.hora_inicio|time:"H:i" }} a {{ horario.hora_fin|time:"H:i" }}
+                </div>
+                <p class="text-muted small">Esta acción no se puede deshacer. Las citas futuras programadas en este horario podrían verse afectadas.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <a href="{% url 'doctores:eliminar_horario' horario.id %}" class="btn btn-danger">
+                    <i class="fas fa-trash me-2"></i>Eliminar Horario
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Agregar ID al formulario para el botón submit externo
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form[method="POST"]');
+    if (form) {
+        form.id = 'editForm';
+    }
+    
+    // Calcular estadísticas en tiempo real
+    calcularEstadisticas();
+    
+    // Recalcular cuando cambien los valores
+    document.getElementById('{{ form.hora_inicio.id_for_label }}').addEventListener('change', calcularEstadisticas);
+    document.getElementById('{{ form.hora_fin.id_for_label }}').addEventListener('change', calcularEstadisticas);
+    document.getElementById('{{ form.duracion_cita.id_for_label }}').addEventListener('change', calcularEstadisticas);
+});
+
+function confirmarEliminacion() {
+    const modal = new bootstrap.Modal(document.getElementById('modalEliminar'));
+    modal.show();
+}
+
+function calcularEstadisticas() {
+    const horaInicio = document.getElementById('{{ form.hora_inicio.id_for_label }}').value;
+    const horaFin = document.getElementById('{{ form.hora_fin.id_for_label }}').value;
+    const duracionCita = parseInt(document.getElementById('{{ form.duracion_cita.id_for_label }}').value) || 30;
+    
+    if (horaInicio && horaFin) {
+        const inicio = new Date('2000-01-01T' + horaInicio);
+        const fin = new Date('2000-01-01T' + horaFin);
+        
+        if (fin > inicio) {
+            const diferenciaMinutos = (fin - inicio) / (1000 * 60);
+            const franjas = Math.floor(diferenciaMinutos / duracionCita);
+            const horas = Math.floor(diferenciaMinutos / 60);
+            const minutos = diferenciaMinutos % 60;
+            
+            document.getElementById('franjas-calculadas').textContent = franjas;
+            document.getElementById('tiempo-total').textContent = `${horas}h ${minutos}min`;
+        } else {
+            document.getElementById('franjas-calculadas').textContent = '0';
+            document.getElementById('tiempo-total').textContent = '0h 0min';
+        }
+    }
+}
+
+// Validación en tiempo real
+document.addEventListener('DOMContentLoaded', function() {
+    const horaInicio = document.getElementById('{{ form.hora_inicio.id_for_label }}');
+    const horaFin = document.getElementById('{{ form.hora_fin.id_for_label }}');
+    
+    function validarHorarios() {
+        if (horaInicio.value && horaFin.value) {
+            if (horaInicio.value >= horaFin.value) {
+                horaFin.setCustomValidity('La hora de fin debe ser posterior a la hora de inicio');
+                horaFin.classList.add('is-invalid');
+            } else {
+                horaFin.setCustomValidity('');
+                horaFin.classList.remove('is-invalid');
+                horaFin.classList.add('is-valid');
+            }
+        }
+    }
+    
+    horaInicio.addEventListener('change', validarHorarios);
+    horaFin.addEventListener('change', validarHorarios);
+});
+</script>
+{% endblock %} 

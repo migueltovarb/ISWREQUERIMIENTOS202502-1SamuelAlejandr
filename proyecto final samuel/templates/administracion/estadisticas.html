@@ -1,0 +1,302 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Estadísticas del Sistema - AgendaMédica{% endblock %}
+
+{% block extra_css %}
+<style>
+    .chart-container {
+        position: relative;
+        height: 300px;
+        margin-bottom: 20px;
+    }
+    .stat-card {
+        transition: transform 0.2s;
+        border-left: 4px solid #007bff;
+    }
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-chart-bar text-primary"></i> Estadísticas del Sistema</h2>
+                    <p class="text-muted">Análisis detallado del rendimiento y uso del sistema</p>
+                </div>
+                <a href="{% url 'administracion:dashboard' %}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left"></i> Volver al Dashboard
+                </a>
+            </div>
+
+            <!-- Gráficos principales -->
+            <div class="row mb-4">
+                <!-- Doctores registrados por mes -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-user-md"></i> Doctores Registrados por Mes</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="chartDoctoresPorMes"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Horarios por día de la semana -->
+                <div class="col-lg-6 mb-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-calendar-week"></i> Horarios por Día de la Semana</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="chart-container">
+                                <canvas id="chartHorariosPorDia"></canvas>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Estadísticas detalladas -->
+            <div class="row mb-4">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-table"></i> Resumen Detallado</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <!-- Tabla de doctores por mes -->
+                                <div class="col-lg-6">
+                                    <h6>Doctores Registrados por Mes</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Mes</th>
+                                                    <th class="text-end">Cantidad</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for item in doctores_por_mes %}
+                                                    <tr>
+                                                        <td>{{ item.mes }}</td>
+                                                        <td class="text-end">
+                                                            <span class="badge bg-primary">{{ item.count }}</span>
+                                                        </td>
+                                                    </tr>
+                                                {% empty %}
+                                                    <tr>
+                                                        <td colspan="2" class="text-center text-muted">
+                                                            No hay datos disponibles
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+
+                                <!-- Tabla de horarios por día -->
+                                <div class="col-lg-6">
+                                    <h6>Horarios Configurados por Día</h6>
+                                    <div class="table-responsive">
+                                        <table class="table table-sm">
+                                            <thead>
+                                                <tr>
+                                                    <th>Día</th>
+                                                    <th class="text-end">Horarios</th>
+                                                </tr>
+                                            </thead>
+                                            <tbody>
+                                                {% for item in horarios_por_dia %}
+                                                    <tr>
+                                                        <td>{{ item.dia }}</td>
+                                                        <td class="text-end">
+                                                            <span class="badge bg-info">{{ item.count }}</span>
+                                                        </td>
+                                                    </tr>
+                                                {% empty %}
+                                                    <tr>
+                                                        <td colspan="2" class="text-center text-muted">
+                                                            No hay datos disponibles
+                                                        </td>
+                                                    </tr>
+                                                {% endfor %}
+                                            </tbody>
+                                        </table>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Información adicional -->
+            <div class="row">
+                <div class="col-12">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-info-circle"></i> Información del Sistema</h5>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <h6>Estado del Sistema</h6>
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-check text-success"></i> Sistema operativo</li>
+                                        <li><i class="fas fa-check text-success"></i> Base de datos conectada</li>
+                                        <li><i class="fas fa-check text-success"></i> Módulo de doctores activo</li>
+                                        <li><i class="fas fa-clock text-warning"></i> Módulo de citas en desarrollo</li>
+                                        <li><i class="fas fa-clock text-warning"></i> Módulo de notificaciones en desarrollo</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <h6>Próximas Funcionalidades</h6>
+                                    <ul class="list-unstyled">
+                                        <li><i class="fas fa-calendar-plus text-info"></i> Gestión completa de citas</li>
+                                        <li><i class="fas fa-bell text-info"></i> Sistema de notificaciones</li>
+                                        <li><i class="fas fa-mobile-alt text-info"></i> Aplicación móvil</li>
+                                        <li><i class="fas fa-chart-line text-info"></i> Reportes avanzados</li>
+                                        <li><i class="fas fa-file-export text-info"></i> Exportación de datos</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<script>
+// Datos para el gráfico de doctores por mes
+const doctoresPorMesData = {
+    labels: [
+        {% for item in doctores_por_mes %}
+            '{{ item.mes }}'{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ],
+    datasets: [{
+        label: 'Doctores Registrados',
+        data: [
+            {% for item in doctores_por_mes %}
+                {{ item.count }}{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ],
+        backgroundColor: 'rgba(54, 162, 235, 0.2)',
+        borderColor: 'rgba(54, 162, 235, 1)',
+        borderWidth: 2,
+        fill: true
+    }]
+};
+
+// Configuración del gráfico de doctores por mes
+const configDoctoresPorMes = {
+    type: 'line',
+    data: doctoresPorMesData,
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                display: false
+            }
+        }
+    }
+};
+
+// Datos para el gráfico de horarios por día
+const horariosPorDiaData = {
+    labels: [
+        {% for item in horarios_por_dia %}
+            '{{ item.dia }}'{% if not forloop.last %},{% endif %}
+        {% endfor %}
+    ],
+    datasets: [{
+        label: 'Horarios Configurados',
+        data: [
+            {% for item in horarios_por_dia %}
+                {{ item.count }}{% if not forloop.last %},{% endif %}
+            {% endfor %}
+        ],
+        backgroundColor: [
+            'rgba(255, 99, 132, 0.8)',
+            'rgba(54, 162, 235, 0.8)',
+            'rgba(255, 205, 86, 0.8)',
+            'rgba(75, 192, 192, 0.8)',
+            'rgba(153, 102, 255, 0.8)',
+            'rgba(255, 159, 64, 0.8)',
+            'rgba(199, 199, 199, 0.8)'
+        ],
+        borderColor: [
+            'rgba(255, 99, 132, 1)',
+            'rgba(54, 162, 235, 1)',
+            'rgba(255, 205, 86, 1)',
+            'rgba(75, 192, 192, 1)',
+            'rgba(153, 102, 255, 1)',
+            'rgba(255, 159, 64, 1)',
+            'rgba(199, 199, 199, 1)'
+        ],
+        borderWidth: 1
+    }]
+};
+
+// Configuración del gráfico de horarios por día
+const configHorariosPorDia = {
+    type: 'bar',
+    data: horariosPorDiaData,
+    options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+            y: {
+                beginAtZero: true,
+                ticks: {
+                    stepSize: 1
+                }
+            }
+        },
+        plugins: {
+            legend: {
+                display: false
+            }
+        }
+    }
+};
+
+// Crear los gráficos
+document.addEventListener('DOMContentLoaded', function() {
+    const ctxDoctores = document.getElementById('chartDoctoresPorMes').getContext('2d');
+    new Chart(ctxDoctores, configDoctoresPorMes);
+
+    const ctxHorarios = document.getElementById('chartHorariosPorDia').getContext('2d');
+    new Chart(ctxHorarios, configHorariosPorDia);
+});
+</script>
+{% endblock %} 

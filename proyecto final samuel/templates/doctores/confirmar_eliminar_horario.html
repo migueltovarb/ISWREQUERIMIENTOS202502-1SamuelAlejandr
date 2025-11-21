@@ -1,0 +1,77 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Eliminar Horario - AgendaMédica{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                        Confirmar Eliminación
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <i class="fas fa-warning me-2"></i>
+                        <strong>¡Atención!</strong> Esta acción no se puede deshacer.
+                    </div>
+                    
+                    <p>¿Estás seguro de que deseas eliminar el siguiente horario?</p>
+                    
+                    <div class="card bg-light">
+                        <div class="card-body">
+                            <h6><i class="fas fa-user-md me-2"></i>Doctor</h6>
+                            <p class="mb-2">Dr. {{ horario.doctor.get_nombre_completo }}</p>
+                            
+                            <h6><i class="fas fa-calendar-day me-2"></i>Día de la Semana</h6>
+                            <p class="mb-2">{{ horario.get_dia_semana_display }}</p>
+                            
+                            <h6><i class="fas fa-clock me-2"></i>Horario</h6>
+                            <p class="mb-2">
+                                De {{ horario.hora_inicio|time:"H:i" }} a {{ horario.hora_fin|time:"H:i" }}
+                            </p>
+                            
+                            <h6><i class="fas fa-stopwatch me-2"></i>Duración por Cita</h6>
+                            <p class="mb-2">{{ horario.duracion_cita }} minutos</p>
+                            
+                            <h6><i class="fas fa-toggle-on me-2"></i>Estado</h6>
+                            <p class="mb-0">
+                                <span class="badge {% if horario.activo %}bg-success{% else %}bg-secondary{% endif %}">
+                                    {% if horario.activo %}Activo{% else %}Inactivo{% endif %}
+                                </span>
+                            </p>
+                        </div>
+                    </div>
+                    
+                    <div class="mt-3">
+                        <p class="text-muted small">
+                            <i class="fas fa-info-circle me-1"></i>
+                            Al eliminar este horario, ya no estará disponible para nuevas citas. Las citas ya programadas podrían verse afectadas.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="card-footer">
+                    <div class="d-flex justify-content-between">
+                        <a href="{% if user.es_administrador %}{% url 'doctores:gestionar_horarios' %}?doctor_id={{ horario.doctor.id }}{% else %}{% url 'doctores:gestionar_horarios' %}{% endif %}" 
+                           class="btn btn-secondary">
+                            <i class="fas fa-arrow-left me-2"></i>Cancelar
+                        </a>
+                        
+                        <form method="POST" style="display: inline;">
+                            {% csrf_token %}
+                            <button type="submit" class="btn btn-danger">
+                                <i class="fas fa-trash me-2"></i>Eliminar Horario
+                            </button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

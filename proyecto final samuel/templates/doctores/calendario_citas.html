@@ -1,0 +1,197 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Calendario de Citas - AgendaMédica{% endblock %}
+
+{% block extra_css %}
+<style>
+    .calendario-header {
+        background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    .franja-horaria {
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        padding: 10px;
+        margin: 5px 0;
+        transition: all 0.2s;
+    }
+    .franja-disponible {
+        background-color: #d4edda;
+        border-color: #c3e6cb;
+    }
+    .franja-ocupada {
+        background-color: #f8d7da;
+        border-color: #f5c6cb;
+    }
+    .franja-no-disponible {
+        background-color: #e2e3e5;
+        border-color: #d6d8db;
+        color: #6c757d;
+    }
+    .doctor-section {
+        border-left: 4px solid #007bff;
+        margin-bottom: 30px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header -->
+    <div class="calendario-header">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2><i class="fas fa-calendar-alt me-2"></i> Calendario de Citas</h2>
+                <p class="mb-0">Visualiza las citas y disponibilidad de los doctores</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <i class="fas fa-stethoscope fa-3x opacity-50"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Filtros -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-filter me-2"></i> Filtros</h5>
+        </div>
+        <div class="card-body">
+            <form method="GET">
+                <div class="row">
+                    <div class="col-md-6 mb-3">
+                        <label for="{{ form.fecha.id_for_label }}" class="form-label">
+                            {{ form.fecha.label }}
+                        </label>
+                        {{ form.fecha }}
+                    </div>
+                    {% if not user.es_doctor %}
+                        <div class="col-md-6 mb-3">
+                            <label for="{{ form.doctor.id_for_label }}" class="form-label">
+                                {{ form.doctor.label }}
+                            </label>
+                            {{ form.doctor }}
+                        </div>
+                    {% endif %}
+                </div>
+                <button type="submit" class="btn btn-primary">
+                    <i class="fas fa-search me-2"></i> Filtrar
+                </button>
+                <a href="{% url 'doctores:calendario_citas' %}" class="btn btn-outline-secondary ms-2">
+                    <i class="fas fa-times me-2"></i> Limpiar
+                </a>
+            </form>
+        </div>
+    </div>
+
+    <!-- Calendario -->
+    <div class="row">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="fas fa-calendar-day me-2"></i>
+                        {{ fecha_seleccionada|date:"l, d \d\e F \d\e Y" }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if franjas_por_doctor %}
+                        {% for doctor, franjas in franjas_por_doctor.items %}
+                            <div class="doctor-section card mb-4">
+                                <div class="card-header">
+                                    <div class="row align-items-center">
+                                        <div class="col-md-8">
+                                            <h6 class="mb-0">
+                                                <i class="fas fa-user-md me-2"></i>
+                                                Dr. {{ doctor.get_nombre_completo }}
+                                            </h6>
+                                            <small class="text-muted">{{ doctor.especialidad.nombre }}</small>
+                                        </div>
+                                        <div class="col-md-4 text-end">
+                                            {% if doctor.consultorio %}
+                                                <small class="text-muted">
+                                                    <i class="fas fa-door-open me-1"></i>{{ doctor.consultorio }}
+                                                </small>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="card-body">
+                                    {% if franjas %}
+                                        <div class="row">
+                                            {% for franja in franjas %}
+                                                <div class="col-lg-3 col-md-4 col-sm-6 mb-2">
+                                                    <div class="franja-horaria franja-{{ franja.estado }}">
+                                                        <div class="d-flex justify-content-between align-items-center">
+                                                            <strong>{{ franja.hora|time:"H:i" }}</strong>
+                                                            {% if franja.estado == 'disponible' %}
+                                                                <span class="badge bg-success">Disponible</span>
+                                                            {% elif franja.estado == 'ocupado' %}
+                                                                <span class="badge bg-danger">Ocupado</span>
+                                                            {% else %}
+                                                                <span class="badge bg-secondary">No disponible</span>
+                                                            {% endif %}
+                                                        </div>
+                                                        {% if franja.paciente %}
+                                                            <small class="text-muted d-block mt-1">
+                                                                <i class="fas fa-user me-1"></i>{{ franja.paciente }}
+                                                            </small>
+                                                        {% endif %}
+                                                    </div>
+                                                </div>
+                                            {% endfor %}
+                                        </div>
+                                    {% else %}
+                                        <div class="text-center text-muted py-4">
+                                            <i class="fas fa-calendar-times fa-2x mb-2"></i>
+                                            <p>No hay horarios configurados para este día</p>
+                                        </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <div class="text-center text-muted py-5">
+                            <i class="fas fa-calendar-times fa-3x mb-3"></i>
+                            <h5>No hay doctores disponibles</h5>
+                            <p>No se encontraron doctores para mostrar en el calendario.</p>
+                        </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Leyenda -->
+    <div class="card mt-4">
+        <div class="card-header">
+            <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i> Leyenda</h6>
+        </div>
+        <div class="card-body">
+            <div class="row">
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="franja-horaria franja-disponible me-3" style="width: 30px; height: 20px; min-width: 30px;"></div>
+                        <span>Disponible para citas</span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="franja-horaria franja-ocupada me-3" style="width: 30px; height: 20px; min-width: 30px;"></div>
+                        <span>Ocupado (cita confirmada)</span>
+                    </div>
+                </div>
+                <div class="col-md-4">
+                    <div class="d-flex align-items-center mb-2">
+                        <div class="franja-horaria franja-no-disponible me-3" style="width: 30px; height: 20px; min-width: 30px;"></div>
+                        <span>No disponible (excepción)</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 

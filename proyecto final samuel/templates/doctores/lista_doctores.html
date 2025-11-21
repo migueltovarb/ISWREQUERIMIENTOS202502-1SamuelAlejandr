@@ -1,0 +1,263 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestión de Doctores - AgendaMédica{% endblock %}
+
+{% block extra_css %}
+<style>
+    .doctor-card {
+        transition: transform 0.2s;
+    }
+    .doctor-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .status-badge {
+        font-size: 0.8em;
+    }
+    .search-filters {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-user-md text-primary"></i> Gestión de Doctores</h2>
+                    <p class="text-muted">Administrar perfiles de doctores del sistema</p>
+                </div>
+                <a href="{% url 'doctores:crear_doctor' %}" class="btn btn-primary">
+                    <i class="fas fa-plus"></i> Agregar Doctor
+                </a>
+            </div>
+
+            <!-- Filtros de búsqueda -->
+            <div class="search-filters">
+                <form method="GET" class="row g-3">
+                    <div class="col-md-4">
+                        <label for="busqueda" class="form-label">Buscar</label>
+                        <input type="text" class="form-control" id="busqueda" name="busqueda" 
+                               value="{{ busqueda }}" placeholder="Nombre, email o licencia...">
+                    </div>
+                    <div class="col-md-3">
+                        <label for="especialidad" class="form-label">Especialidad</label>
+                        <select class="form-control" id="especialidad" name="especialidad">
+                            <option value="">Todas las especialidades</option>
+                            {% for especialidad in especialidades %}
+                                <option value="{{ especialidad.id }}" 
+                                        {% if especialidad.id|stringformat:"s" == especialidad_seleccionada %}selected{% endif %}>
+                                    {{ especialidad.nombre }}
+                                </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label for="activo" class="form-label">Estado</label>
+                        <select class="form-control" id="activo" name="activo">
+                            <option value="">Todos</option>
+                            <option value="true" {% if activo_seleccionado == 'true' %}selected{% endif %}>Activos</option>
+                            <option value="false" {% if activo_seleccionado == 'false' %}selected{% endif %}>Inactivos</option>
+                        </select>
+                    </div>
+                    <div class="col-md-2 d-flex align-items-end">
+                        <button type="submit" class="btn btn-outline-primary me-2">
+                            <i class="fas fa-search"></i> Buscar
+                        </button>
+                        <a href="{% url 'doctores:lista_doctores' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-times"></i>
+                        </a>
+                    </div>
+                </form>
+            </div>
+
+            <!-- Resultados -->
+            {% if page_obj %}
+                <div class="row">
+                    {% for doctor in page_obj %}
+                        <div class="col-lg-6 col-xl-4 mb-4">
+                            <div class="card doctor-card h-100">
+                                <div class="card-body">
+                                    <div class="d-flex justify-content-between align-items-start mb-3">
+                                        <div>
+                                            <h5 class="card-title mb-1">
+                                                Dr. {{ doctor.get_nombre_completo }}
+                                            </h5>
+                                            <p class="text-muted mb-0">{{ doctor.especialidad.nombre }}</p>
+                                        </div>
+                                        <span class="badge {% if doctor.activo %}bg-success{% else %}bg-secondary{% endif %} status-badge">
+                                            {% if doctor.activo %}Activo{% else %}Inactivo{% endif %}
+                                        </span>
+                                    </div>
+                                    
+                                    <div class="mb-3">
+                                        <small class="text-muted d-block">
+                                            <i class="fas fa-envelope"></i> {{ doctor.usuario.email }}
+                                        </small>
+                                        <small class="text-muted d-block">
+                                            <i class="fas fa-id-card"></i> Lic: {{ doctor.numero_licencia }}
+                                        </small>
+                                        {% if doctor.consultorio %}
+                                            <small class="text-muted d-block">
+                                                <i class="fas fa-door-open"></i> {{ doctor.consultorio }}
+                                            </small>
+                                        {% endif %}
+                                        {% if doctor.telefono_consultorio %}
+                                            <small class="text-muted d-block">
+                                                <i class="fas fa-phone"></i> {{ doctor.telefono_consultorio }}
+                                            </small>
+                                        {% endif %}
+                                    </div>
+
+                                    <!-- Indicador de horarios -->
+                                    <div class="mb-3">
+                                        {% with horarios_count=doctor.horarios_atencion.count %}
+                                            {% if horarios_count > 0 %}
+                                                <small class="text-success">
+                                                    <i class="fas fa-clock"></i> 
+                                                    {{ horarios_count }} día{{ horarios_count|pluralize:"s" }} configurado{{ horarios_count|pluralize:"s" }}
+                                                </small>
+                                            {% else %}
+                                                <small class="text-warning">
+                                                    <i class="fas fa-exclamation-triangle"></i> 
+                                                    Sin horarios configurados
+                                                </small>
+                                            {% endif %}
+                                        {% endwith %}
+                                    </div>
+                                </div>
+                                
+                                <div class="card-footer bg-transparent">
+                                    <div class="btn-group w-100" role="group">
+                                        <a href="{% url 'doctores:editar_doctor' doctor.id %}" 
+                                           class="btn btn-outline-primary btn-sm">
+                                            <i class="fas fa-edit"></i> Editar
+                                        </a>
+                                        <a href="{% url 'doctores:gestionar_horarios' %}?doctor_id={{ doctor.id }}" 
+                                           class="btn btn-outline-info btn-sm">
+                                            <i class="fas fa-clock"></i> Horarios
+                                        </a>
+                                        <a href="{% url 'doctores:gestionar_excepciones' %}?doctor_id={{ doctor.id }}" 
+                                           class="btn btn-outline-warning btn-sm">
+                                            <i class="fas fa-calendar-times"></i> Excepciones
+                                        </a>
+                                        <button type="button" class="btn btn-outline-danger btn-sm" 
+                                                onclick="confirmarEliminacion({{ doctor.id }}, '{{ doctor.get_nombre_completo }}')">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                </div>
+
+                <!-- Paginación -->
+                {% if page_obj.has_other_pages %}
+                    <nav aria-label="Paginación de doctores">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1{% if busqueda %}&busqueda={{ busqueda }}{% endif %}{% if especialidad_seleccionada %}&especialidad={{ especialidad_seleccionada }}{% endif %}{% if activo_seleccionado %}&activo={{ activo_seleccionado }}{% endif %}">
+                                        <i class="fas fa-angle-double-left"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}{% if busqueda %}&busqueda={{ busqueda }}{% endif %}{% if especialidad_seleccionada %}&especialidad={{ especialidad_seleccionada }}{% endif %}{% if activo_seleccionado %}&activo={{ activo_seleccionado }}{% endif %}">
+                                        <i class="fas fa-angle-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}{% if busqueda %}&busqueda={{ busqueda }}{% endif %}{% if especialidad_seleccionada %}&especialidad={{ especialidad_seleccionada }}{% endif %}{% if activo_seleccionado %}&activo={{ activo_seleccionado }}{% endif %}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}{% if busqueda %}&busqueda={{ busqueda }}{% endif %}{% if especialidad_seleccionada %}&especialidad={{ especialidad_seleccionada }}{% endif %}{% if activo_seleccionado %}&activo={{ activo_seleccionado }}{% endif %}">
+                                        <i class="fas fa-angle-right"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}{% if busqueda %}&busqueda={{ busqueda }}{% endif %}{% if especialidad_seleccionada %}&especialidad={{ especialidad_seleccionada }}{% endif %}{% if activo_seleccionado %}&activo={{ activo_seleccionado }}{% endif %}">
+                                        <i class="fas fa-angle-double-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+
+            {% else %}
+                <div class="text-center py-5">
+                    <i class="fas fa-user-md fa-3x text-muted mb-3"></i>
+                    <h4 class="text-muted">No se encontraron doctores</h4>
+                    <p class="text-muted">
+                        {% if busqueda or especialidad_seleccionada or activo_seleccionado %}
+                            Intenta ajustar los filtros de búsqueda.
+                        {% else %}
+                            Comienza agregando el primer doctor al sistema.
+                        {% endif %}
+                    </p>
+                    {% if not busqueda and not especialidad_seleccionada and not activo_seleccionado %}
+                        <a href="{% url 'doctores:crear_doctor' %}" class="btn btn-primary">
+                            <i class="fas fa-plus"></i> Agregar Primer Doctor
+                        </a>
+                    {% endif %}
+                </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<!-- Modal de confirmación de eliminación -->
+<div class="modal fade" id="modalEliminar" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Eliminación</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>¿Estás seguro de que deseas desactivar al doctor <strong id="nombreDoctor"></strong>?</p>
+                <p class="text-muted small">Esta acción desactivará al doctor pero no eliminará su información del sistema.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                <form id="formEliminar" method="POST" style="display: inline;">
+                    {% csrf_token %}
+                    <button type="submit" class="btn btn-danger">Desactivar Doctor</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function confirmarEliminacion(doctorId, nombreDoctor) {
+    document.getElementById('nombreDoctor').textContent = nombreDoctor;
+    document.getElementById('formEliminar').action = `/doctores/${doctorId}/eliminar/`;
+    
+    const modal = new bootstrap.Modal(document.getElementById('modalEliminar'));
+    modal.show();
+}
+</script>
+{% endblock %} 

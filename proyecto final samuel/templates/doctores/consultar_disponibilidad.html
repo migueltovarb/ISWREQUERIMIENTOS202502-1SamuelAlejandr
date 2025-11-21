@@ -1,0 +1,350 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Consultar Disponibilidad - AgendaMédica{% endblock %}
+
+{% block extra_css %}
+<style>
+    .search-section {
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        color: white;
+        border-radius: 15px;
+        padding: 30px;
+        margin-bottom: 30px;
+    }
+    .doctor-card {
+        transition: transform 0.2s;
+        border-left: 4px solid #007bff;
+    }
+    .doctor-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    }
+    .franja-disponible {
+        background-color: #d4edda;
+        border: 1px solid #c3e6cb;
+        border-radius: 5px;
+        padding: 8px 12px;
+        margin: 3px;
+        display: inline-block;
+        cursor: pointer;
+        transition: all 0.2s;
+    }
+    .franja-disponible:hover {
+        background-color: #c3e6cb;
+        transform: scale(1.05);
+    }
+    .fecha-header {
+        background-color: #f8f9fa;
+        border-left: 4px solid #28a745;
+        padding: 10px 15px;
+        margin: 10px 0;
+        border-radius: 5px;
+    }
+    .no-disponibilidad {
+        background-color: #f8d7da;
+        border: 1px solid #f5c6cb;
+        border-radius: 8px;
+        padding: 20px;
+        text-align: center;
+        color: #721c24;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Sección de búsqueda -->
+    <div class="search-section">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <h2><i class="fas fa-search me-2"></i> Consultar Disponibilidad de Doctores</h2>
+                <p class="mb-0">Encuentra las franjas horarias disponibles para agendar tu cita médica</p>
+            </div>
+            <div class="col-md-4 text-end">
+                <i class="fas fa-calendar-alt fa-3x opacity-50"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Formulario de búsqueda -->
+    <div class="card mb-4">
+        <div class="card-header">
+            <h5 class="mb-0"><i class="fas fa-filter me-2"></i> Filtros de Búsqueda</h5>
+        </div>
+        <div class="card-body">
+            <form method="GET">
+                <div class="row">
+                    <div class="col-md-3 mb-3">
+                        <label for="{{ form.fecha_inicio.id_for_label }}" class="form-label">
+                            {{ form.fecha_inicio.label }}
+                        </label>
+                        {{ form.fecha_inicio }}
+                        {% if form.fecha_inicio.help_text %}
+                            <div class="form-text">{{ form.fecha_inicio.help_text }}</div>
+                        {% endif %}
+                        {% if form.fecha_inicio.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.fecha_inicio.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <label for="{{ form.fecha_fin.id_for_label }}" class="form-label">
+                            {{ form.fecha_fin.label }}
+                        </label>
+                        {{ form.fecha_fin }}
+                        {% if form.fecha_fin.help_text %}
+                            <div class="form-text">{{ form.fecha_fin.help_text }}</div>
+                        {% endif %}
+                        {% if form.fecha_fin.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.fecha_fin.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <label for="{{ form.especialidad.id_for_label }}" class="form-label">
+                            {{ form.especialidad.label }}
+                        </label>
+                        {{ form.especialidad }}
+                        {% if form.especialidad.help_text %}
+                            <div class="form-text">{{ form.especialidad.help_text }}</div>
+                        {% endif %}
+                        {% if form.especialidad.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.especialidad.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                    
+                    <div class="col-md-3 mb-3">
+                        <label for="{{ form.doctor.id_for_label }}" class="form-label">
+                            {{ form.doctor.label }}
+                        </label>
+                        {{ form.doctor }}
+                        {% if form.doctor.help_text %}
+                            <div class="form-text">{{ form.doctor.help_text }}</div>
+                        {% endif %}
+                        {% if form.doctor.errors %}
+                            <div class="invalid-feedback d-block">
+                                {{ form.doctor.errors.0 }}
+                            </div>
+                        {% endif %}
+                    </div>
+                </div>
+                
+                <!-- Errores generales del formulario -->
+                {% if form.non_field_errors %}
+                    <div class="alert alert-danger">
+                        {% for error in form.non_field_errors %}
+                            <div>{{ error }}</div>
+                        {% endfor %}
+                    </div>
+                {% endif %}
+                
+                <div class="d-flex justify-content-between align-items-center">
+                    <div>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-search me-2"></i> Buscar Disponibilidad
+                        </button>
+                        <a href="{% url 'doctores:consultar_disponibilidad' %}" class="btn btn-outline-secondary ms-2">
+                            <i class="fas fa-times me-2"></i> Limpiar
+                        </a>
+                    </div>
+                    {% if user.is_authenticated and user.es_administrador %}
+                        <a href="{% url 'administracion:dashboard' %}" class="btn btn-outline-info">
+                            <i class="fas fa-arrow-left me-2"></i> Volver al Dashboard
+                        </a>
+                    {% endif %}
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Resultados de disponibilidad -->
+    {% if fecha_inicio and fecha_fin %}
+        <div class="card">
+            <div class="card-header">
+                <h5 class="mb-0">
+                    <i class="fas fa-calendar-check me-2"></i> 
+                    Disponibilidad del {{ fecha_inicio|date:"d/m/Y" }} al {{ fecha_fin|date:"d/m/Y" }}
+                </h5>
+            </div>
+            <div class="card-body">
+                {% if hay_resultados %}
+                    {% for doctor, fechas_franjas in doctores_disponibilidad.items %}
+                        <div class="doctor-card card mb-4">
+                            <div class="card-header">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <h6 class="mb-0">
+                                            <i class="fas fa-user-md me-2"></i>
+                                            Dr. {{ doctor.get_nombre_completo }}
+                                        </h6>
+                                        <small class="text-muted">{{ doctor.especialidad.nombre }}</small>
+                                    </div>
+                                    <div class="col-md-4 text-end">
+                                        {% if doctor.consultorio %}
+                                            <small class="text-muted">
+                                                <i class="fas fa-door-open me-1"></i>{{ doctor.consultorio }}
+                                            </small>
+                                        {% endif %}
+                                        {% if doctor.telefono_consultorio %}
+                                            <br>
+                                            <small class="text-muted">
+                                                <i class="fas fa-phone me-1"></i>{{ doctor.telefono_consultorio }}
+                                            </small>
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="card-body">
+                                {% for fecha, franjas in fechas_franjas.items %}
+                                    <div class="fecha-header">
+                                        <strong>
+                                            <i class="fas fa-calendar me-2"></i>
+                                            {{ fecha|date:"l, d \d\e F \d\e Y" }}
+                                        </strong>
+                                        <span class="badge bg-success ms-2">{{ franjas|length }} franja{{ franjas|length|pluralize:"s" }} disponible{{ franjas|length|pluralize:"s" }}</span>
+                                    </div>
+                                    <div class="mb-3">
+                                        {% for franja in franjas %}
+                                            <span class="franja-disponible" 
+                                                  data-doctor="{{ doctor.id }}" 
+                                                  data-fecha="{{ fecha|date:'Y-m-d' }}" 
+                                                  data-hora="{{ franja.hora }}"
+                                                  onclick="seleccionarFranja(this)">
+                                                <i class="fas fa-clock me-1"></i>
+                                                {{ franja.hora|time:"H:i" }}
+                                            </span>
+                                        {% endfor %}
+                                    </div>
+                                {% empty %}
+                                    <div class="text-muted text-center py-3">
+                                        <i class="fas fa-calendar-times fa-2x mb-2"></i>
+                                        <p>No hay franjas disponibles para este doctor en el rango seleccionado</p>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% else %}
+                    <div class="no-disponibilidad">
+                        <i class="fas fa-calendar-times fa-3x mb-3"></i>
+                        <h5>No hay disponibilidad en el rango seleccionado</h5>
+                        <p class="mb-3">No se encontraron franjas disponibles para los criterios especificados.</p>
+                        <div class="mt-3">
+                            <strong>Sugerencias:</strong>
+                            <ul class="list-unstyled mt-2">
+                                <li><i class="fas fa-arrow-right me-2"></i> Amplía el rango de fechas</li>
+                                <li><i class="fas fa-arrow-right me-2"></i> Prueba con diferentes especialidades</li>
+                                <li><i class="fas fa-arrow-right me-2"></i> Consulta disponibilidad para todos los doctores</li>
+                            </ul>
+                        </div>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    {% else %}
+        <div class="card">
+            <div class="card-body text-center py-5">
+                <i class="fas fa-search fa-3x text-muted mb-3"></i>
+                <h5 class="text-muted">Busca disponibilidad de doctores</h5>
+                <p class="text-muted">Selecciona las fechas y filtros deseados, luego haz clic en "Buscar Disponibilidad"</p>
+            </div>
+        </div>
+    {% endif %}
+</div>
+
+<!-- Modal para seleccionar franja -->
+<div class="modal fade" id="modalSeleccionarFranja" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirmar Selección</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Has seleccionado la siguiente franja:</p>
+                <div class="alert alert-info">
+                    <strong>Doctor:</strong> <span id="modalDoctor"></span><br>
+                    <strong>Fecha:</strong> <span id="modalFecha"></span><br>
+                    <strong>Hora:</strong> <span id="modalHora"></span>
+                </div>
+                <p class="text-muted">Esta funcionalidad estará disponible cuando se implemente el sistema de citas.</p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                <button type="button" class="btn btn-primary" disabled>
+                    <i class="fas fa-calendar-plus me-2"></i> Agendar Cita
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+function seleccionarFranja(elemento) {
+    const doctorId = elemento.getAttribute('data-doctor');
+    const fecha = elemento.getAttribute('data-fecha');
+    const hora = elemento.getAttribute('data-hora');
+    
+    // Obtener información del doctor desde el DOM
+    const doctorCard = elemento.closest('.doctor-card');
+    const doctorNombre = doctorCard.querySelector('h6').textContent.trim();
+    
+    // Formatear fecha
+    const fechaObj = new Date(fecha + 'T00:00:00');
+    const fechaFormateada = fechaObj.toLocaleDateString('es-ES', {
+        weekday: 'long',
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric'
+    });
+    
+    // Actualizar modal
+    document.getElementById('modalDoctor').textContent = doctorNombre;
+    document.getElementById('modalFecha').textContent = fechaFormateada;
+    document.getElementById('modalHora').textContent = hora;
+    
+    // Mostrar modal
+    const modal = new bootstrap.Modal(document.getElementById('modalSeleccionarFranja'));
+    modal.show();
+}
+
+document.addEventListener('DOMContentLoaded', function() {
+    // Validación en tiempo real de fechas
+    const fechaInicio = document.getElementById('{{ form.fecha_inicio.id_for_label }}');
+    const fechaFin = document.getElementById('{{ form.fecha_fin.id_for_label }}');
+    
+    function validarFechas() {
+        if (fechaInicio.value && fechaFin.value) {
+            if (fechaInicio.value > fechaFin.value) {
+                fechaFin.setCustomValidity('La fecha de fin debe ser posterior a la fecha de inicio');
+                fechaFin.classList.add('is-invalid');
+            } else {
+                fechaFin.setCustomValidity('');
+                fechaFin.classList.remove('is-invalid');
+            }
+        }
+    }
+    
+    fechaInicio.addEventListener('change', validarFechas);
+    fechaFin.addEventListener('change', validarFechas);
+    
+    // Auto-ajustar fecha fin cuando cambia fecha inicio
+    fechaInicio.addEventListener('change', function() {
+        if (this.value && (!fechaFin.value || fechaFin.value < this.value)) {
+            const fechaInicioObj = new Date(this.value);
+            fechaInicioObj.setDate(fechaInicioObj.getDate() + 7);
+            fechaFin.value = fechaInicioObj.toISOString().split('T')[0];
+        }
+    });
+});
+</script>
+{% endblock %} 

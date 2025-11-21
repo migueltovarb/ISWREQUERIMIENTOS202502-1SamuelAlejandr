@@ -1,0 +1,324 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Dashboard Administrativo - AgendaMédica{% endblock %}
+
+{% block extra_css %}
+<style>
+    .stat-card {
+        transition: transform 0.2s;
+        border-left: 4px solid #007bff;
+    }
+    .stat-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .stat-card.warning {
+        border-left-color: #ffc107;
+    }
+    .stat-card.success {
+        border-left-color: #28a745;
+    }
+    .stat-card.danger {
+        border-left-color: #dc3545;
+    }
+    .stat-card.info {
+        border-left-color: #17a2b8;
+    }
+    .quick-action {
+        transition: all 0.2s;
+    }
+    .quick-action:hover {
+        transform: scale(1.05);
+    }
+    .chart-container {
+        position: relative;
+        height: 300px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <!-- Header del Dashboard -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="d-flex justify-content-between align-items-center">
+                <div>
+                    <h1><i class="fas fa-tachometer-alt text-primary"></i> Dashboard Administrativo</h1>
+                    <p class="text-muted">Bienvenido, {{ user.get_full_name }}. Aquí tienes un resumen del sistema.</p>
+                </div>
+                <div class="text-muted">
+                    <i class="fas fa-clock"></i> {{ "now"|date:"d/m/Y H:i" }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tarjetas de Estadísticas -->
+    <div class="row mb-4">
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card success h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="text-success mb-0">{{ total_doctores }}</h3>
+                            <p class="text-muted mb-0">Doctores Activos</p>
+                        </div>
+                        <div class="text-success">
+                            <i class="fas fa-user-md fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card info h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="text-info mb-0">{{ total_especialidades }}</h3>
+                            <p class="text-muted mb-0">Especialidades</p>
+                        </div>
+                        <div class="text-info">
+                            <i class="fas fa-stethoscope fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card {% if doctores_sin_horarios > 0 %}warning{% else %}success{% endif %} h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="{% if doctores_sin_horarios > 0 %}text-warning{% else %}text-success{% endif %} mb-0">{{ doctores_sin_horarios }}</h3>
+                            <p class="text-muted mb-0">Sin Horarios</p>
+                        </div>
+                        <div class="{% if doctores_sin_horarios > 0 %}text-warning{% else %}text-success{% endif %}">
+                            <i class="fas fa-clock fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-3 col-md-6 mb-3">
+            <div class="card stat-card {% if excepciones_hoy > 0 %}danger{% else %}success{% endif %} h-100">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center">
+                        <div>
+                            <h3 class="{% if excepciones_hoy > 0 %}text-danger{% else %}text-success{% endif %} mb-0">{{ excepciones_hoy }}</h3>
+                            <p class="text-muted mb-0">Excepciones Hoy</p>
+                        </div>
+                        <div class="{% if excepciones_hoy > 0 %}text-danger{% else %}text-success{% endif %}">
+                            <i class="fas fa-calendar-times fa-2x"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Acciones Rápidas -->
+    <div class="row mb-4">
+        <div class="col-12">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-bolt"></i> Acciones Rápidas</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                            <a href="{% url 'doctores:crear_doctor' %}" class="btn btn-outline-success w-100 quick-action">
+                                <i class="fas fa-user-plus d-block mb-2"></i>
+                                Crear Doctor
+                            </a>
+                        </div>
+                        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                            <a href="{% url 'doctores:lista_doctores' %}" class="btn btn-outline-info w-100 quick-action">
+                                <i class="fas fa-users d-block mb-2"></i>
+                                Ver Doctores
+                            </a>
+                        </div>
+                        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                            <a href="{% url 'doctores:calendario_citas' %}" class="btn btn-outline-success w-100 quick-action">
+                                <i class="fas fa-calendar d-block mb-2"></i>
+                                Calendario
+                            </a>
+                        </div>
+                        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                            <a href="{% url 'doctores:consultar_disponibilidad' %}" class="btn btn-outline-primary w-100 quick-action">
+                                <i class="fas fa-search-plus d-block mb-2"></i>
+                                Disponibilidad
+                            </a>
+                        </div>
+                        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                            <a href="{% url 'administracion:gestion_usuarios' %}" class="btn btn-outline-warning w-100 quick-action">
+                                <i class="fas fa-users-cog d-block mb-2"></i>
+                                Usuarios
+                            </a>
+                        </div>
+                        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                            <a href="{% url 'administracion:estadisticas' %}" class="btn btn-outline-secondary w-100 quick-action">
+                                <i class="fas fa-chart-bar d-block mb-2"></i>
+                                Estadísticas
+                            </a>
+                        </div>
+                        <div class="col-lg-2 col-md-4 col-sm-6 mb-3">
+                            <a href="/admin/" class="btn btn-outline-dark w-100 quick-action">
+                                <i class="fas fa-cogs d-block mb-2"></i>
+                                Admin Django
+                            </a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Doctores por Especialidad -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-chart-pie"></i> Doctores por Especialidad</h5>
+                </div>
+                <div class="card-body">
+                    {% if doctores_por_especialidad %}
+                        {% for especialidad in doctores_por_especialidad %}
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span>{{ especialidad.nombre }}</span>
+                                <div class="d-flex align-items-center">
+                                    <div class="progress me-2" style="width: 100px; height: 8px;">
+                                        <div class="progress-bar" role="progressbar" 
+                                             style="width: {% widthratio especialidad.total_doctores total_doctores 100 %}%"></div>
+                                    </div>
+                                    <span class="badge bg-primary">{{ especialidad.total_doctores }}</span>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center">No hay especialidades registradas</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Usuarios por Tipo -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-users"></i> Usuarios por Tipo</h5>
+                </div>
+                <div class="card-body">
+                    <div class="row text-center">
+                        <div class="col-6 mb-3">
+                            <div class="border rounded p-3">
+                                <h4 class="text-primary">{{ usuarios_por_tipo.administradores }}</h4>
+                                <small class="text-muted">Administradores</small>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="border rounded p-3">
+                                <h4 class="text-success">{{ usuarios_por_tipo.doctores }}</h4>
+                                <small class="text-muted">Doctores</small>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="border rounded p-3">
+                                <h4 class="text-info">{{ usuarios_por_tipo.recepcion }}</h4>
+                                <small class="text-muted">Recepción</small>
+                            </div>
+                        </div>
+                        <div class="col-6 mb-3">
+                            <div class="border rounded p-3">
+                                <h4 class="text-warning">{{ usuarios_por_tipo.pacientes }}</h4>
+                                <small class="text-muted">Pacientes</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Últimos Doctores Registrados -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-user-plus"></i> Últimos Doctores Registrados</h5>
+                </div>
+                <div class="card-body">
+                    {% if ultimos_doctores %}
+                        {% for doctor in ultimos_doctores %}
+                            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                                <div>
+                                    <h6 class="mb-0">Dr. {{ doctor.get_nombre_completo }}</h6>
+                                    <small class="text-muted">{{ doctor.especialidad.nombre }}</small>
+                                </div>
+                                <small class="text-muted">{{ doctor.fecha_creacion|date:"d/m/Y" }}</small>
+                            </div>
+                        {% endfor %}
+                        <div class="text-center">
+                            <a href="{% url 'doctores:lista_doctores' %}" class="btn btn-outline-primary btn-sm">
+                                Ver todos los doctores
+                            </a>
+                        </div>
+                    {% else %}
+                        <p class="text-muted text-center">No hay doctores registrados</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Excepciones Próximas -->
+        <div class="col-lg-6 mb-4">
+            <div class="card h-100">
+                <div class="card-header">
+                    <h5 class="mb-0"><i class="fas fa-calendar-times"></i> Excepciones Próximas</h5>
+                </div>
+                <div class="card-body">
+                    {% if excepciones_proximas %}
+                        {% for excepcion in excepciones_proximas %}
+                            <div class="d-flex justify-content-between align-items-center mb-3 pb-2 border-bottom">
+                                <div>
+                                    <h6 class="mb-0">Dr. {{ excepcion.doctor.get_nombre_completo }}</h6>
+                                    <small class="text-muted">{{ excepcion.get_tipo_excepcion_display }}</small>
+                                </div>
+                                <div class="text-end">
+                                    <small class="text-muted d-block">{{ excepcion.fecha_inicio|date:"d/m/Y" }}</small>
+                                    <small class="text-muted">{{ excepcion.fecha_inicio|time:"H:i" }}</small>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% else %}
+                        <p class="text-muted text-center">No hay excepciones próximas</p>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Actualizar la hora cada minuto
+setInterval(function() {
+    const now = new Date();
+    const timeString = now.toLocaleString('es-ES', {
+        day: '2-digit',
+        month: '2-digit',
+        year: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+    document.querySelector('.fa-clock').parentElement.innerHTML = 
+        '<i class="fas fa-clock"></i> ' + timeString;
+}, 60000);
+</script>
+{% endblock %} 

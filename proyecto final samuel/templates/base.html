@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}AgendaMédica{% endblock %}</title>
+    
+    <!-- Bootstrap CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <!-- Custom CSS -->
+    <style>
+        .navbar-brand {
+            font-weight: bold;
+            color: #2c5aa0 !important;
+        }
+        
+        .btn-primary {
+            background-color: #2c5aa0;
+            border-color: #2c5aa0;
+        }
+        
+        .btn-primary:hover {
+            background-color: #1e3f73;
+            border-color: #1e3f73;
+        }
+        
+        .card {
+            box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+            border: 1px solid rgba(0, 0, 0, 0.125);
+        }
+        
+        .footer {
+            background-color: #f8f9fa;
+            padding: 2rem 0;
+            margin-top: auto;
+        }
+        
+        body {
+            display: flex;
+            flex-direction: column;
+            min-height: 100vh;
+        }
+        
+        main {
+            flex: 1;
+        }
+        
+        .alert {
+            border-radius: 0.5rem;
+        }
+    </style>
+    
+    {% block extra_css %}{% endblock %}
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar navbar-expand-lg navbar-light bg-light shadow-sm">
+        <div class="container">
+            <a class="navbar-brand" href="{% url 'usuarios:home' %}">
+                <i class="fas fa-calendar-medical me-2"></i>
+                AgendaMédica
+            </a>
+            
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            
+            <div class="collapse navbar-collapse" id="navbarNav">
+                <ul class="navbar-nav me-auto">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'usuarios:dashboard' %}">
+                                <i class="fas fa-tachometer-alt me-1"></i>
+                                Dashboard
+                            </a>
+                        </li>
+                        
+                        {% if user.es_administrador %}
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" id="navbarDoctores" role="button" data-bs-toggle="dropdown">
+                                    <i class="fas fa-user-md me-1"></i>
+                                    Doctores
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="{% url 'doctores:lista_doctores' %}">
+                                        <i class="fas fa-list me-2"></i>
+                                        Ver Doctores
+                                    </a></li>
+                                    <li><a class="dropdown-item" href="{% url 'doctores:crear_doctor' %}">
+                                        <i class="fas fa-plus me-2"></i>
+                                        Crear Doctor
+                                    </a></li>
+                                </ul>
+                            </li>
+                            
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'administracion:gestion_usuarios' %}">
+                                    <i class="fas fa-users-cog me-1"></i>
+                                    Usuarios
+                                </a>
+                            </li>
+                            
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'administracion:estadisticas' %}">
+                                    <i class="fas fa-chart-bar me-1"></i>
+                                    Estadísticas
+                                </a>
+                            </li>
+                        {% endif %}
+                        
+                        {% if user.es_doctor %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'doctores:gestionar_horarios' %}">
+                                    <i class="fas fa-clock me-1"></i>
+                                    Mis Horarios
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'doctores:gestionar_excepciones' %}">
+                                    <i class="fas fa-calendar-times me-1"></i>
+                                    Excepciones
+                                </a>
+                            </li>
+                        {% endif %}
+                        
+                        {% if user.es_recepcion or user.es_administrador %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="{% url 'doctores:calendario_citas' %}">
+                                    <i class="fas fa-calendar-alt me-1"></i>
+                                    Calendario
+                                </a>
+                            </li>
+                        {% endif %}
+                        
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'doctores:consultar_disponibilidad' %}">
+                                <i class="fas fa-search-plus me-1"></i>
+                                Disponibilidad
+                            </a>
+                        </li>
+                        
+                        {% if user.es_paciente %}
+                            <li class="nav-item">
+                                <a class="nav-link" href="#" onclick="alert('Funcionalidad en desarrollo')">
+                                    <i class="fas fa-calendar-plus me-1"></i>
+                                    Agendar Cita
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="nav-link" href="#" onclick="alert('Funcionalidad en desarrollo')">
+                                    <i class="fas fa-history me-1"></i>
+                                    Mis Citas
+                                </a>
+                            </li>
+                        {% endif %}
+                    {% endif %}
+                </ul>
+                
+                <ul class="navbar-nav">
+                    {% if user.is_authenticated %}
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown">
+                                <i class="fas fa-user me-1"></i>
+                                {{ user.get_full_name|default:user.username }}
+                                <span class="badge bg-secondary ms-1">{{ user.get_tipo_usuario_display }}</span>
+                            </a>
+                            <ul class="dropdown-menu">
+                                <li><a class="dropdown-item" href="#" onclick="alert('Funcionalidad en desarrollo')">
+                                    <i class="fas fa-user-edit me-2"></i>
+                                    Mi Perfil
+                                </a></li>
+                                {% if user.es_administrador %}
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="/admin/">
+                                        <i class="fas fa-cogs me-2"></i>
+                                        Admin Django
+                                    </a></li>
+                                {% endif %}
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="{% url 'usuarios:logout' %}">
+                                    <i class="fas fa-sign-out-alt me-2"></i>
+                                    Cerrar Sesión
+                                </a></li>
+                            </ul>
+                        </li>
+                    {% else %}
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'usuarios:login' %}">
+                                <i class="fas fa-sign-in-alt me-1"></i>
+                                Iniciar Sesión
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link" href="{% url 'usuarios:registro' %}">
+                                <i class="fas fa-user-plus me-1"></i>
+                                Registrarse
+                            </a>
+                        </li>
+                    {% endif %}
+                </ul>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Messages -->
+    {% if messages %}
+        <div class="container mt-3">
+            {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} alert-dismissible fade show" role="alert">
+                    {% if message.tags == 'error' %}
+                        <i class="fas fa-exclamation-triangle me-2"></i>
+                    {% elif message.tags == 'success' %}
+                        <i class="fas fa-check-circle me-2"></i>
+                    {% elif message.tags == 'info' %}
+                        <i class="fas fa-info-circle me-2"></i>
+                    {% elif message.tags == 'warning' %}
+                        <i class="fas fa-exclamation-circle me-2"></i>
+                    {% endif %}
+                    {{ message }}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            {% endfor %}
+        </div>
+    {% endif %}
+
+    <!-- Main Content -->
+    <main class="container-fluid my-4">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Footer -->
+    <footer class="footer bg-light">
+        <div class="container">
+            <div class="row">
+                <div class="col-md-6">
+                    <h5>AgendaMédica</h5>
+                    <p class="text-muted">Sistema integral de gestión de citas médicas</p>
+                </div>
+                <div class="col-md-6 text-md-end">
+                    <p class="text-muted">
+                        &copy; 2025 AgendaMédica. Todos los derechos reservados.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </footer>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    
+    {% block extra_js %}{% endblock %}
+</body>
+</html> 

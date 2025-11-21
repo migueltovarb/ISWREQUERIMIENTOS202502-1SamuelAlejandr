@@ -1,0 +1,14 @@
+Django>=5.2.1
+djangorestframework>=3.16.0
+django-crontab>=0.7.1
+
+# Para futuras integraciones de SMS (opcional)
+# twilio>=8.0.0
+
+# Para base de datos en producción (opcional)
+# psycopg2-binary>=2.9.0  # PostgreSQL
+# mysqlclient>=2.1.0      # MySQL
+
+# Para servidor web en producción (opcional)
+# gunicorn>=21.0.0
+# whitenoise>=6.0.0       # Para servir archivos estáticos 

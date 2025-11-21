@@ -1,0 +1,281 @@
+{% extends 'base.html' %}
+{% load static %}
+
+{% block title %}Gestionar Excepciones - Dr. {{ doctor.get_nombre_completo }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .excepcion-card {
+        transition: transform 0.2s;
+        border-left: 4px solid #ffc107;
+    }
+    .excepcion-card:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+    }
+    .excepcion-card.activa {
+        border-left-color: #dc3545;
+    }
+    .excepcion-card.pasada {
+        border-left-color: #6c757d;
+        opacity: 0.7;
+    }
+    .form-section {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="container-fluid">
+    <div class="row">
+        <div class="col-12">
+            <!-- Header -->
+            <div class="d-flex justify-content-between align-items-center mb-4">
+                <div>
+                    <h2><i class="fas fa-calendar-times text-warning"></i> Gestionar Excepciones</h2>
+                    <p class="text-muted">Dr. {{ doctor.get_nombre_completo }} - {{ doctor.especialidad.nombre }}</p>
+                </div>
+                <div>
+                    <a href="{% url 'doctores:gestionar_horarios' %}?doctor_id={{ doctor.id }}" class="btn btn-outline-info me-2">
+                        <i class="fas fa-clock"></i> Horarios
+                    </a>
+                    {% if user.es_administrador %}
+                        <a href="{% url 'doctores:lista_doctores' %}" class="btn btn-outline-secondary">
+                            <i class="fas fa-arrow-left"></i> Volver
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Excepciones Actuales -->
+                <div class="col-lg-8">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-calendar-times"></i> Excepciones de Horario</h5>
+                        </div>
+                        <div class="card-body">
+                            {% if excepciones %}
+                                <div class="row">
+                                    {% for excepcion in excepciones %}
+                                        <div class="col-md-6 mb-3">
+                                            <div class="card excepcion-card {% if excepcion.esta_activa %}activa{% endif %}">
+                                                <div class="card-body">
+                                                    <div class="d-flex justify-content-between align-items-start mb-2">
+                                                        <h6 class="mb-0">{{ excepcion.get_tipo_excepcion_display }}</h6>
+                                                        <span class="badge {% if excepcion.esta_activa %}bg-danger{% else %}bg-warning{% endif %}">
+                                                            {% if excepcion.esta_activa %}Activa{% else %}Programada{% endif %}
+                                                        </span>
+                                                    </div>
+                                                    
+                                                    <div class="mb-2">
+                                                        <small class="text-muted d-block">
+                                                            <i class="fas fa-calendar"></i> 
+                                                            {{ excepcion.fecha_inicio|date:"d/m/Y" }}
+                                                            {% if not excepcion.todo_el_dia %}
+                                                                {{ excepcion.fecha_inicio|time:"H:i" }}
+                                                            {% endif %}
+                                                        </small>
+                                                        <small class="text-muted d-block">
+                                                            <i class="fas fa-calendar-check"></i> 
+                                                            {{ excepcion.fecha_fin|date:"d/m/Y" }}
+                                                            {% if not excepcion.todo_el_dia %}
+                                                                {{ excepcion.fecha_fin|time:"H:i" }}
+                                                            {% endif %}
+                                                        </small>
+                                                        {% if excepcion.todo_el_dia %}
+                                                            <small class="text-info">
+                                                                <i class="fas fa-sun"></i> Todo el día
+                                                            </small>
+                                                        {% endif %}
+                                                    </div>
+
+                                                    <div class="mb-3">
+                                                        <small class="text-muted">Motivo:</small>
+                                                        <p class="mb-0">{{ excepcion.motivo|truncatewords:10 }}</p>
+                                                    </div>
+
+                                                    <div class="d-flex justify-content-between align-items-center">
+                                                        <small class="text-muted">
+                                                            {% if excepcion.notificado %}
+                                                                <i class="fas fa-check-circle text-success"></i> Notificado
+                                                            {% else %}
+                                                                <i class="fas fa-clock text-warning"></i> Pendiente
+                                                            {% endif %}
+                                                        </small>
+                                                        <a href="{% url 'doctores:eliminar_excepcion' excepcion.id %}" 
+                                                           class="btn btn-outline-danger btn-sm">
+                                                            <i class="fas fa-trash"></i>
+                                                        </a>
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    {% endfor %}
+                                </div>
+                            {% else %}
+                                <div class="text-center py-5">
+                                    <i class="fas fa-calendar-plus fa-3x text-muted mb-3"></i>
+                                    <h5>No hay excepciones registradas</h5>
+                                    <p class="text-muted">Agrega tu primera excepción de horario usando el formulario de la derecha.</p>
+                                </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Formulario para Agregar Excepción -->
+                <div class="col-lg-4">
+                    <div class="card">
+                        <div class="card-header">
+                            <h5 class="mb-0"><i class="fas fa-plus"></i> Agregar Excepción</h5>
+                        </div>
+                        <div class="card-body">
+                            <form method="POST">
+                                {% csrf_token %}
+                                
+                                <div class="mb-3">
+                                    <label for="{{ form.tipo_excepcion.id_for_label }}" class="form-label">
+                                        {{ form.tipo_excepcion.label }}
+                                    </label>
+                                    {{ form.tipo_excepcion }}
+                                    {% if form.tipo_excepcion.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.tipo_excepcion.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="row">
+                                    <div class="col-12 mb-3">
+                                        <label for="{{ form.fecha_inicio.id_for_label }}" class="form-label">
+                                            {{ form.fecha_inicio.label }}
+                                        </label>
+                                        {{ form.fecha_inicio }}
+                                        {% if form.fecha_inicio.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.fecha_inicio.errors.0 }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                    <div class="col-12 mb-3">
+                                        <label for="{{ form.fecha_fin.id_for_label }}" class="form-label">
+                                            {{ form.fecha_fin.label }}
+                                        </label>
+                                        {{ form.fecha_fin }}
+                                        {% if form.fecha_fin.errors %}
+                                            <div class="invalid-feedback d-block">
+                                                {{ form.fecha_fin.errors.0 }}
+                                            </div>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <div class="form-check">
+                                        {{ form.todo_el_dia }}
+                                        <label class="form-check-label" for="{{ form.todo_el_dia.id_for_label }}">
+                                            {{ form.todo_el_dia.label }}
+                                        </label>
+                                    </div>
+                                    {% if form.todo_el_dia.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.todo_el_dia.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="{{ form.motivo.id_for_label }}" class="form-label">
+                                        {{ form.motivo.label }}
+                                    </label>
+                                    {{ form.motivo }}
+                                    {% if form.motivo.errors %}
+                                        <div class="invalid-feedback d-block">
+                                            {{ form.motivo.errors.0 }}
+                                        </div>
+                                    {% endif %}
+                                </div>
+
+                                <!-- Errores generales del formulario -->
+                                {% if form.non_field_errors %}
+                                    <div class="alert alert-danger">
+                                        {% for error in form.non_field_errors %}
+                                            <div>{{ error }}</div>
+                                        {% endfor %}
+                                    </div>
+                                {% endif %}
+
+                                <button type="submit" class="btn btn-warning w-100">
+                                    <i class="fas fa-save"></i> Registrar Excepción
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+
+                    <!-- Información útil -->
+                    <div class="card mt-3">
+                        <div class="card-header">
+                            <h6 class="mb-0"><i class="fas fa-info-circle"></i> Información</h6>
+                        </div>
+                        <div class="card-body">
+                            <small class="text-muted">
+                                <ul class="mb-0">
+                                    <li>Las excepciones bloquean la disponibilidad para citas</li>
+                                    <li>Se notificará automáticamente a los pacientes afectados</li>
+                                    <li>Puedes marcar "Todo el día" para bloqueos completos</li>
+                                    <li>Las excepciones pasadas se ocultan automáticamente</li>
+                                </ul>
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+// Validación en tiempo real
+document.addEventListener('DOMContentLoaded', function() {
+    const fechaInicio = document.getElementById('{{ form.fecha_inicio.id_for_label }}');
+    const fechaFin = document.getElementById('{{ form.fecha_fin.id_for_label }}');
+    const todoElDia = document.getElementById('{{ form.todo_el_dia.id_for_label }}');
+    
+    function validarFechas() {
+        if (fechaInicio.value && fechaFin.value) {
+            if (fechaInicio.value >= fechaFin.value) {
+                fechaFin.setCustomValidity('La fecha de fin debe ser posterior a la fecha de inicio');
+                fechaFin.classList.add('is-invalid');
+            } else {
+                fechaFin.setCustomValidity('');
+                fechaFin.classList.remove('is-invalid');
+                fechaFin.classList.add('is-valid');
+            }
+        }
+    }
+    
+    function toggleHorarios() {
+        if (todoElDia.checked) {
+            // Si es todo el día, ajustar las fechas para que solo muestren la fecha
+            if (fechaInicio.value) {
+                fechaInicio.value = fechaInicio.value.split('T')[0] + 'T00:00';
+            }
+            if (fechaFin.value) {
+                fechaFin.value = fechaFin.value.split('T')[0] + 'T23:59';
+            }
+        }
+    }
+    
+    fechaInicio.addEventListener('change', validarFechas);
+    fechaFin.addEventListener('change', validarFechas);
+    todoElDia.addEventListener('change', toggleHorarios);
+});
+</script>
+{% endblock %} 

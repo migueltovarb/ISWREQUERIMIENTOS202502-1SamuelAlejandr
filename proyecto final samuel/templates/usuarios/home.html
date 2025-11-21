@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+
+{% block title %}Inicio - AgendaMédica{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-lg-8 mx-auto">
+        <!-- Hero Section -->
+        <div class="text-center mb-5">
+            <h1 class="display-4 fw-bold text-primary mb-3">
+                <i class="fas fa-calendar-medical me-3"></i>
+                AgendaMédica
+            </h1>
+            <p class="lead text-muted">
+                Sistema integral de gestión de citas médicas. 
+                Agenda, modifica y gestiona tus citas de manera fácil y segura.
+            </p>
+        </div>
+
+        <!-- Features -->
+        <div class="row mb-5">
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <i class="fas fa-calendar-plus fa-3x text-primary mb-3"></i>
+                        <h5 class="card-title">Agenda Fácil</h5>
+                        <p class="card-text">
+                            Consulta disponibilidad y agenda tus citas médicas en pocos clics.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <i class="fas fa-bell fa-3x text-success mb-3"></i>
+                        <h5 class="card-title">Recordatorios</h5>
+                        <p class="card-text">
+                            Recibe recordatorios automáticos por correo y SMS antes de tu cita.
+                        </p>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-4 mb-4">
+                <div class="card h-100 text-center">
+                    <div class="card-body">
+                        <i class="fas fa-user-md fa-3x text-info mb-3"></i>
+                        <h5 class="card-title">Múltiples Doctores</h5>
+                        <p class="card-text">
+                            Accede a la agenda de múltiples doctores y especialidades.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Call to Action -->
+        <div class="card bg-light">
+            <div class="card-body text-center py-5">
+                <h3 class="card-title mb-4">¿Listo para comenzar?</h3>
+                <p class="card-text mb-4">
+                    Únete a AgendaMédica y gestiona tus citas médicas de manera eficiente.
+                </p>
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center">
+                    <a href="{% url 'usuarios:registro' %}" class="btn btn-primary btn-lg me-md-2">
+                        <i class="fas fa-user-plus me-2"></i>
+                        Registrarse
+                    </a>
+                    <a href="{% url 'usuarios:login' %}" class="btn btn-outline-primary btn-lg">
+                        <i class="fas fa-sign-in-alt me-2"></i>
+                        Iniciar Sesión
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Additional Info -->
+        <div class="row mt-5">
+            <div class="col-md-6">
+                <h4><i class="fas fa-shield-alt text-success me-2"></i>Seguro y Confiable</h4>
+                <p class="text-muted">
+                    Tus datos están protegidos con los más altos estándares de seguridad.
+                    Cumplimos con todas las normativas de protección de datos médicos.
+                </p>
+            </div>
+            <div class="col-md-6">
+                <h4><i class="fas fa-clock text-primary me-2"></i>Disponible 24/7</h4>
+                <p class="text-muted">
+                    Accede al sistema las 24 horas del día, los 7 días de la semana.
+                    Agenda y gestiona tus citas cuando más te convenga.
+                </p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %} 
